@@ -1,0 +1,7 @@
+Data;Numero;Fornitore;Partita IVA;Imponibile;Aliquota;Imposta;Natura;Descrizione
+15/01/2026;120;AUTO CENTRO S.R.L.;55566677788;20.000,00;22;4.400,00;;Autovettura aziendale uso promiscuo
+20/01/2026;45;EDIL SUB S.R.L.;99988877766;5.000,00;22;1.100,00;;Prestazioni edili in subappalto - integrazione reverse charge
+08/01/2026;77;UFFICIO FORNITURE S.P.A.;33344455566;1.200,00;22;264,00;;Cancelleria e materiale di consumo
+22/01/2026;312;RISTORANTE DA MARIO;44455566677;500,00;10;50,00;;Ristorante - pranzo di lavoro
+25/01/2026;900;TIM S.P.A.;00488410010;300,00;22;66,00;;Telefonia mobile aziendale
+Totale;;;;27.000,00;;5.880,00;;

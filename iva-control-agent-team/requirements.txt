@@ -1,0 +1,9 @@
+# Dipendenze opzionali: il sistema funziona con la sola libreria standard,
+# con le limitazioni dichiarate nel README (Excel sostituiti da CSV, PDF non letti).
+
+# Lettura e scrittura di file .xlsx
+openpyxl>=3.1
+
+# Estrazione di testo da PDF (registri, bozze di liquidazione, F24).
+# pdfplumber e' il backend preferito; pypdf e' l'alternativa piu' leggera.
+pdfplumber>=0.11 ; python_version >= "3.9"

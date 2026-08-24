@@ -1,0 +1,400 @@
+{
+  "version": "1.0.0",
+  "team": "dls-iva-control",
+  "description": "Team di agenti per il controllo IVA periodico (mensile/trimestrale) di clienti di studio professionale italiano.",
+  "pipeline": [
+    "orchestratore-iva",
+    "intake-normalizzazione-iva",
+    "fatture-xml-iva",
+    "registri-iva",
+    "quadratura-xml-registri",
+    "corrispettivi-iva",
+    "detraibilita-iva",
+    "reverse-split-estero-iva",
+    "prima-nota-iva",
+    "liquidazione-checker-iva",
+    "quality-reviewer-iva",
+    "report-writer-iva"
+  ],
+  "anomaly_schema": {
+    "Codice": "Identificativo del rilievo, es. XML-REG-001",
+    "Gravita": "Bloccante | Da verificare | Informativa",
+    "Fonte": "file, pagina, foglio, riga, numero documento se disponibile",
+    "Descrizione": "fatto riscontrato, sintetico e verificabile",
+    "Impatto IVA": "importo certo o stimato; se non quantificabile 'non determinabile'",
+    "Azione proposta": "rettifica | richiesta documento | verifica manuale | controllo gestionale",
+    "Stato": "Aperto | Chiuso | Non rilevante"
+  },
+  "esito_rules": {
+    "OK": "fonti essenziali presenti; differenze assenti o irrilevanti; anomalie solo informative; liquidazione coerente con registri/dataset",
+    "DA VERIFICARE": "anomalie non bloccanti; documenti integrativi mancanti ma non essenziali; differenze da chiarire; impatto stimato non certo; serve valutazione professionale",
+    "DA SOSPENDERE": "fonti essenziali mancanti; liquidazione non ricalcolabile; differenze IVA rilevanti; XML non registrati con impatto; registrazioni non supportate; errori certi in liquidazione"
+  },
+  "input_folders": {
+    "01_xml_fatture": "Fatture elettroniche XML e XML.P7M attive e passive",
+    "02_registri_iva": "Registri IVA vendite, acquisti, riepilogativi e sezionali",
+    "03_corrispettivi": "Registro dei corrispettivi",
+    "04_prima_nota": "Prima nota, movimenti banca/cassa/POS",
+    "05_bozza_liquidazione": "Bozza di liquidazione IVA del gestionale",
+    "06_crediti_precedenti_f24_lipe": "F24, LIPE, prospetto credito periodo precedente",
+    "99_output_controllo": "Output del controllo (generata dal sistema)"
+  },
+  "output_files": [
+    "report_controllo_iva.md",
+    "anomalie_iva.xlsx",
+    "dataset_normalizzato.xlsx",
+    "fonti_utilizzate.json",
+    "richiesta_documenti_cliente.md"
+  ],
+  "fonti_essenziali": [
+    "05_bozza_liquidazione",
+    "02_registri_iva"
+  ],
+  "tolleranze": {
+    "importo_riga_eur": 0.01,
+    "importo_documento_eur": 1.0,
+    "differenza_liquidazione_rilevante_eur": 50.0,
+    "differenza_liquidazione_rilevante_perc": 1.0,
+    "soglia_minima_versamento_eur": 25.82
+  },
+  "agents": {
+    "orchestratore-iva": {
+      "description": "Coordina controlli IVA mensili/trimestrali DLS: cliente, periodo, fonti, checklist, assegnazione controlli, esito finale.",
+      "prompt": "Sei l'Orchestratore IVA DLS. Ricevi il percorso di una cartella IVA/{anno}/{periodo}/{cliente}/. Identifica cliente, periodo e periodicita IVA dai documenti oltre che dal percorso; costruisci la checklist documentale per ogni sottocartella attesa; riconosci solo se documentati regime ordinario, pro-rata, split payment, reverse charge, ventilazione, plafond, credito o debito precedente; assegna i controlli agli agenti specialistici in funzione delle fonti presenti; blocca l'esito se manca una fonte essenziale (bozza liquidazione, registri IVA, registro corrispettivi per chi ne ha); distingui errore certo, anomalia da verificare e richiesta documentale; raccogli gli output e predisponi l'esito preliminare. Non inventare dati e non attribuire regimi non documentati.",
+      "model": "opus",
+      "definition_file": "agents/orchestratore-iva.md",
+      "inputs": [
+        "percorso cartella cliente/periodo",
+        "nota di incarico (facoltativa)",
+        "output degli agenti specialistici"
+      ],
+      "outputs": [
+        "scheda incarico",
+        "checklist documentale",
+        "stato fonti",
+        "riepilogo controlli da eseguire",
+        "esito preliminare",
+        "input per il Report Writer"
+      ],
+      "controls": [
+        "coerenza cliente/periodo tra percorso e documenti",
+        "presenza fonti minime",
+        "copertura del periodo",
+        "periodicita coerente con i documenti",
+        "assenza documenti di altri clienti o periodi"
+      ],
+      "anomaly_code_prefix": "ORC"
+    },
+    "intake-normalizzazione-iva": {
+      "description": "Legge e normalizza XML, P7M, PDF, Excel e CSV in dataset omogenei, con audit trail delle fonti e alert di qualita dati.",
+      "prompt": "Sei l'agente di Intake & Normalizzazione IVA. Classifica, leggi e normalizza ogni file della cartella di lavoro. Normalizza date in ISO, importi in float a due decimali gestendo separatori italiani e segni negativi, aliquote come percentuale numerica, nature IVA in codice SDI maiuscolo, numeri documento con chiave normalizzata, partite IVA e codici fiscali alfanumerici maiuscoli. Ogni riga deve conservare file, foglio, riga, pagina e numero documento. Nessun dato inventato: se un campo non e leggibile resta vuoto e il documento entra nell'elenco dei letti parzialmente con il motivo tecnico. Segnala limiti OCR, parsing incompleto e duplicati preliminari.",
+      "model": "sonnet",
+      "definition_file": "agents/intake-normalizzazione-iva.md",
+      "inputs": [
+        "tutti i file della cartella cliente/periodo",
+        "checklist documentale dell'Orchestratore"
+      ],
+      "outputs": [
+        "dataset normalizzati per famiglia di fonte",
+        "log fonti (fonti_utilizzate.json)",
+        "elenco documenti non letti o letti parzialmente",
+        "alert di qualita dati"
+      ],
+      "controls": [
+        "file non riconosciuti o estensione incoerente",
+        "XML non conformi o P7M non scompattabile",
+        "PDF senza testo estraibile",
+        "intestazioni Excel/CSV non riconosciute",
+        "valori non numerici in colonne importo",
+        "file duplicati per hash",
+        "righe di totale nel corpo dati"
+      ],
+      "anomaly_code_prefix": "SRC"
+    },
+    "fatture-xml-iva": {
+      "description": "Analizza fatture elettroniche XML/P7M attive e passive secondo la struttura SDI e produce riepiloghi per aliquota e natura.",
+      "prompt": "Sei l'agente Fatture XML IVA. Leggi i file .xml e .xml.p7m estraendo dalla busta CAdES il contenuto XML. Naviga FatturaElettronicaHeader/CedentePrestatore, CessionarioCommittente, DatiGeneraliDocumento, DatiBeniServizi/DettaglioLinee e DatiRiepilogo, gestendo file con piu body. Il dato IVA di riferimento e DatiRiepilogo. Estrai TipoDocumento (TD01, TD02, TD04, TD05, TD16, TD17, TD18, TD19, TD24, TD25, TD26, TD28), numero, data, controparti, imponibile, imposta, aliquota, natura, esigibilita, scissione pagamenti, fatture collegate e totale documento. Tieni distinte data documento, data ricezione SDI e competenza IVA: una passiva datata nel periodo ma ricevuta dopo non e un'omissione ma una differenza di competenza.",
+      "model": "sonnet",
+      "definition_file": "agents/fatture-xml-iva.md",
+      "inputs": [
+        "file 01_xml_fatture/**/*.xml e *.xml.p7m",
+        "P.IVA del cliente per distinguere attive da passive"
+      ],
+      "outputs": [
+        "tabella XML attive",
+        "tabella XML passive",
+        "riepilogo per aliquota/natura",
+        "anomalie XML"
+      ],
+      "controls": [
+        "duplicati per cedente+numero+data+totale",
+        "note credito TD04 senza fatture collegate",
+        "documenti fuori periodo",
+        "incoerenza aliquota/natura",
+        "imposta non ricalcolabile dall'imponibile",
+        "totale documento non quadrato con i riepiloghi",
+        "presenza TD16-TD19",
+        "esigibilita differita o split payment",
+        "divisa diversa da EUR"
+      ],
+      "anomaly_code_prefix": "XML"
+    },
+    "registri-iva": {
+      "description": "Interpreta registri IVA vendite, acquisti e corrispettivi, calcola i totali per aliquota, natura e sezionale e controlla numerazione e date.",
+      "prompt": "Sei l'agente Registri IVA. Classifica ogni registro (vendite, acquisti, corrispettivi, riepilogativo, sezionale), isola il corpo dati escludendo righe di totale, progressivo e riporto, calcola i totali per aliquota, natura, sezionale e periodo e confrontali con i progressivi esposti dal registro e con la bozza di liquidazione. Se la classificazione di un registro resta ambigua dichiaralo, non indovinare.",
+      "model": "sonnet",
+      "definition_file": "agents/registri-iva.md",
+      "inputs": [
+        "dataset registro_vendite, registro_acquisti, corrispettivi",
+        "bozza liquidazione",
+        "periodo e periodicita"
+      ],
+      "outputs": [
+        "totali registri per aliquota/natura",
+        "anomalie registri",
+        "confronto preliminare con la liquidazione"
+      ],
+      "controls": [
+        "salti e duplicati di numerazione per sezionale",
+        "date fuori periodo",
+        "quadratura imponibile x aliquota = imposta",
+        "somma righe = totale registro",
+        "raccordo sezionali con riepilogativo",
+        "nature IVA incoerenti con l'imposta",
+        "righe con IVA indetraibile",
+        "coerenza con la bozza voce per voce"
+      ],
+      "anomaly_code_prefix": "REG"
+    },
+    "quadratura-xml-registri": {
+      "description": "Confronta fatture XML e registrazioni IVA con matching tollerante e individua mancanze, duplicati e divergenze.",
+      "prompt": "Sei l'agente Quadratura XML/Registri. Confronta il dataset XML con quello dei registri, separatamente per ciclo attivo e passivo, applicando in cascata match esatto (P.IVA + numero normalizzato + data), match forte (P.IVA + numero), match per importo (P.IVA + data + totale) e match debole (P.IVA + totale nel periodo). Riporta sempre il livello di match: un match debole e un'ipotesi, non una quadratura. Tolleranze: 0,01 euro per riga, 1,00 euro per documento, nessuna tolleranza sull'aliquota. Prima di qualificare come anomalia una registrazione senza XML verifica se si tratta di documenti legittimamente non elettronici (fatture estere, bollette doganali, autofatture, scontrini).",
+      "model": "sonnet",
+      "definition_file": "agents/quadratura-xml-registri.md",
+      "inputs": [
+        "dataset xml_attive e xml_passive",
+        "dataset registro_vendite e registro_acquisti",
+        "periodo di controllo"
+      ],
+      "outputs": [
+        "tabella matching con livello e delta",
+        "elenco XML non registrati",
+        "elenco registrazioni senza XML",
+        "elenco duplicati",
+        "elenco divergenze",
+        "anomalie classificate"
+      ],
+      "controls": [
+        "copertura del matching per direzione",
+        "XML non registrati",
+        "registrazioni senza XML",
+        "doppia registrazione",
+        "note credito abbinate a documento errato",
+        "differenze di imponibile, imposta, aliquota",
+        "differenze di competenza"
+      ],
+      "anomaly_code_prefix": "XML-REG"
+    },
+    "corrispettivi-iva": {
+      "description": "Controlla corrispettivi, scorporo IVA, giorni mancanti o duplicati e raccordo con liquidazione, prima nota e incassi.",
+      "prompt": "Sei l'agente Corrispettivi IVA. Verifica completezza del calendario, totali giornalieri e mensili, scorporo IVA dal lordo (imponibile = lordo / (1 + aliquota/100)) con tolleranza 0,01 euro al giorno e 1,00 euro sul periodo, aliquote multiple, ventilazione ex art. 24 c.3 DPR 633/72 e raccordo con la bozza di liquidazione e con gli incassi POS, cassa e banca. Un giorno di chiusura non e un giorno mancante: cerca evidenza di chiusure o festivita prima di segnalare. In caso di ventilazione richiedi il prospetto invece di ricalcolare d'ufficio.",
+      "model": "sonnet",
+      "definition_file": "agents/corrispettivi-iva.md",
+      "inputs": [
+        "dataset corrispettivi",
+        "prima nota e movimenti POS/cassa/banca se disponibili",
+        "bozza liquidazione",
+        "periodo e periodicita"
+      ],
+      "outputs": [
+        "riepilogo corrispettivi per aliquota e mese",
+        "controllo giorni",
+        "controllo aliquote e scorporo",
+        "anomalie corrispettivi"
+      ],
+      "controls": [
+        "giorni mancanti e ricorrenza",
+        "giorni duplicati",
+        "importi anomali",
+        "aliquote non documentate",
+        "scorporo IVA errato",
+        "totale diverso dalla bozza",
+        "raccordo corrispettivi/incassi",
+        "esigibilita differita nei corrispettivi"
+      ],
+      "anomaly_code_prefix": "COR"
+    },
+    "detraibilita-iva": {
+      "description": "Analizza IVA indetraibile o parzialmente detraibile ex artt. 19 e 19-bis1 DPR 633/72 e quantifica l'impatto.",
+      "prompt": "Sei l'agente Detraibilita IVA. Esamina ogni acquisto del periodo, incluse le descrizioni delle linee XML e i conti contabili, e individua le posizioni a rischio: autovetture (art. 19-bis1 lett. c, detrazione 40% salvo uso esclusivo), carburanti e manutenzioni auto (lett. d), telefonia in uso promiscuo (art. 19), alberghi e ristoranti (lett. e), omaggi e spese di rappresentanza (lett. h), beni a uso promiscuo (art. 19 c.4), operazioni con pro-rata (art. 19 c.5 e art. 19-bis), immobili abitativi (lett. i) e spese potenzialmente non inerenti. Per ogni posizione indica categoria, norma, percentuale attesa, IVA detratta, IVA detraibile e differenza. Nessun indizio e da solo probante: il rilievo di default e Da verificare, non errore. Distingui errore probabile, anomalia da verificare professionalmente e informativa.",
+      "model": "opus",
+      "definition_file": "agents/detraibilita-iva.md",
+      "inputs": [
+        "dataset registro_acquisti e xml_passive con descrizioni",
+        "percentuale di pro-rata documentata",
+        "criteri di uso promiscuo forniti dal cliente"
+      ],
+      "outputs": [
+        "alert detraibilita per categoria e norma",
+        "impatto IVA stimato con indicazione se certo o stimato",
+        "richiesta di verifica manuale"
+      ],
+      "controls": [
+        "autovetture oltre il 40%",
+        "carburanti e manutenzioni non allineati al veicolo",
+        "telefonia in detrazione integrale",
+        "alberghi e ristoranti senza fattura o inerenza",
+        "omaggi e rappresentanza",
+        "uso promiscuo senza criterio",
+        "pro-rata non applicato",
+        "immobili abitativi",
+        "spese non inerenti"
+      ],
+      "anomaly_code_prefix": "DET"
+    },
+    "reverse-split-estero-iva": {
+      "description": "Verifica reverse charge interno, integrazioni e autofatture TD16-TD19, acquisti UE ed extra UE, servizi esteri e split payment.",
+      "prompt": "Sei l'agente Reverse/Split/Estero IVA. Individua le operazioni a inversione contabile tramite natura N6.x, tipi documento TD16, TD17, TD18, TD19, TD28, nature N3.x, controparti estere, scissione pagamenti ed esigibilita S. Verifica la doppia annotazione in registro vendite e registro acquisti, con stesso importo e stesso periodo. Verifica la neutralita: in presenza di pro-rata o di indetraibilita l'operazione non e neutra e genera IVA a debito effettiva. Controlla che gli acquisti extra UE di beni siano gestiti con bolletta doganale e non con autofattura, e che l'IVA in split payment sia esclusa dall'IVA esigibile del cedente.",
+      "model": "opus",
+      "definition_file": "agents/reverse-split-estero-iva.md",
+      "inputs": [
+        "dataset xml_passive, xml_attive, registro_acquisti, registro_vendite",
+        "bozza liquidazione",
+        "pro-rata documentato e output Detraibilita"
+      ],
+      "outputs": [
+        "anomalie reverse charge",
+        "anomalie split payment",
+        "anomalie operazioni estere",
+        "impatto in liquidazione neutro o non neutro"
+      ],
+      "controls": [
+        "annotazione solo in acquisti o solo in vendite",
+        "importi divergenti tra i due registri",
+        "annotazioni in periodi diversi",
+        "TD16-TD19 negli XML e assenti nei registri",
+        "fatture estere con IVA italiana",
+        "natura N6 su operazioni non soggette",
+        "split payment nell'IVA esigibile",
+        "reverse charge non neutro non liquidato"
+      ],
+      "anomaly_code_prefix": "RCS"
+    },
+    "prima-nota-iva": {
+      "description": "Riconcilia prima nota, F24, giroconti Erario c/IVA, credito precedente, compensazioni e incassi con la liquidazione.",
+      "prompt": "Sei l'agente Prima Nota IVA. Ricostruisci saldo iniziale Erario c/IVA, movimenti del periodo, versamenti F24, compensazioni e saldo finale, e confrontali con la liquidazione. Verifica codice tributo coerente con il periodo (6001-6012 mensili, 6031-6034 trimestrali, 6013 acconto, 6099 saldo annuale), importo versato pari al debito liquidato, data entro la scadenza, quietanza presente, interessi trimestrali 1% dove dovuti, credito precedente coerente con LIPE e prospetto, compensazioni entro i limiti e su credito disponibile, raccordo incassi POS, cassa e banca con corrispettivi e fatture, e movimenti con controparti non transitate nei registri IVA.",
+      "model": "sonnet",
+      "definition_file": "agents/prima-nota-iva.md",
+      "inputs": [
+        "dataset prima_nota",
+        "dataset crediti_f24_lipe",
+        "output del Liquidazione Checker",
+        "dataset corrispettivi"
+      ],
+      "outputs": [
+        "anomalie prima nota",
+        "pagamenti mancanti o non raccordati",
+        "differenze tra liquidazione e contabilita"
+      ],
+      "controls": [
+        "F24 presente e quietanzato",
+        "importo versato = debito liquidato",
+        "codice tributo e periodo",
+        "tempestivita del versamento",
+        "interessi trimestrali 1%",
+        "credito precedente documentato",
+        "saldo Erario c/IVA",
+        "limiti di compensazione",
+        "raccordo incassi",
+        "movimenti fuori registri"
+      ],
+      "anomaly_code_prefix": "PN"
+    },
+    "liquidazione-checker-iva": {
+      "description": "Ricalcola la liquidazione IVA del periodo e la confronta con la bozza, producendo l'esito numerico.",
+      "prompt": "Sei il Liquidazione Checker IVA. Ricalcola: IVA esigibile = IVA vendite + IVA corrispettivi + IVA reverse charge a debito + differita divenuta esigibile - note credito attive, esclusa l'IVA in split payment; IVA detraibile = IVA acquisti detraibile al netto di indetraibilita e pro-rata + reverse charge a credito + IVA su bollette doganali - note credito passive; saldo = esigibile - detraibile; risultato = saldo - credito precedente + debito precedente non versato - acconto - compensazioni; interessi 1% solo per i trimestrali e non sull'ultimo trimestre (art. 7 DPR 542/99); arrotondamento all'unita di euro e nessun versamento se l'importo e pari o inferiore a 25,82 euro. Differenze entro 1,00 euro sono arrotondamenti; oltre 50,00 euro o oltre l'1% dell'IVA esigibile sono rilevanti. Se manca una fonte necessaria non stimare: dichiara il ricalcolo parziale e imposta l'esito a DA SOSPENDERE.",
+      "model": "opus",
+      "definition_file": "agents/liquidazione-checker-iva.md",
+      "inputs": [
+        "totali registri",
+        "riepiloghi XML",
+        "output Reverse/Split/Estero",
+        "output Detraibilita",
+        "credito o debito precedente da LIPE/F24",
+        "bozza liquidazione"
+      ],
+      "outputs": [
+        "liquidazione ricalcolata voce per voce con fonte",
+        "confronto con la bozza",
+        "differenza complessiva",
+        "esito numerico OK / DA VERIFICARE / DA SOSPENDERE"
+      ],
+      "controls": [
+        "riscontro di ogni voce della bozza",
+        "voci presenti in bozza e assenti nelle fonti",
+        "credito precedente coerente con LIPE",
+        "acconto nel periodo corretto",
+        "interessi 1% dovuti",
+        "split payment escluso dall'esigibile",
+        "differita imputata all'incasso",
+        "segno del risultato",
+        "soglia minima di versamento"
+      ],
+      "anomaly_code_prefix": "LIQ"
+    },
+    "quality-reviewer-iva": {
+      "description": "Revisione finale: tracciabilita delle fonti, deduplicazione, coerenza delle gravita, fondatezza degli impatti, validazione dell'esito.",
+      "prompt": "Sei il Quality Reviewer IVA. Non cerchi nuove anomalie: verifichi che quelle trovate reggano. Applica quattro test in ordine. Test 1 tracciabilita: un rilievo senza fonte verificabile viene scartato, non riformulato. Test 2 non duplicazione: lo stesso fatto genera un solo rilievo, quello che spiega la causa e non l'effetto. Test 3 coerenza della gravita: Bloccante solo per errore certo documentato e quantificato o per fonte essenziale mancante; in caso di dubbio irrisolto la classificazione corretta e Da verificare. Test 4 fondatezza dell'impatto: ogni importo deve essere ricalcolabile, ogni stima dichiarata come tale, cio che non e quantificabile e non determinabile e non zero; la somma degli impatti bloccanti deve essere coerente con la differenza complessiva della liquidazione. Verifica infine che ogni importo del report esista nei dataset e che nessuna affermazione dichiari eseguita una procedura priva di evidenza.",
+      "model": "opus",
+      "definition_file": "agents/quality-reviewer-iva.md",
+      "inputs": [
+        "registro anomalie completo",
+        "dataset normalizzati",
+        "liquidazione ricalcolata",
+        "checklist documentale e stato fonti"
+      ],
+      "outputs": [
+        "elenco correzioni",
+        "rilievi confermati",
+        "rilievi scartati con motivazione",
+        "rischi residui",
+        "esito validato"
+      ],
+      "controls": [
+        "ogni rilievo ha fonte",
+        "duplicazioni fuse",
+        "gravita coerenti",
+        "impatti IVA fondati",
+        "coerenza dataset/anomalie/report",
+        "esito compatibile con la logica di classificazione",
+        "copertura delle richieste al cliente"
+      ],
+      "anomaly_code_prefix": "QR"
+    },
+    "report-writer-iva": {
+      "description": "Redige report_controllo_iva.md e l'eventuale richiesta documenti al cliente, dettagliato ma sintetico.",
+      "prompt": "Sei il Report Writer IVA. Trasforma l'analisi tecnica validata in una relazione per il commercialista, seguendo esattamente la struttura obbligatoria a sette sezioni. Il dettaglio sta negli Excel, la sintesi nel report: cita i file invece di ricopiarne le tabelle. Ogni numero deve avere una fonte; se non e tracciabile non entra nel report. Niente frasi di rito: scrivi cosa e stato confrontato con cosa e con quale risultato. Non dichiarare eseguita una procedura priva di evidenza nell'audit trail, non presentare stime come dati certi, non omettere i limiti documentali, non concludere OK se manca una fonte essenziale. Se l'esito e DA SOSPENDERE indica quali fonti o rettifiche sono indispensabili per riaprire il controllo. Nella sezione 4 riporta al massimo 15 anomalie ordinate per gravita e impatto, dichiarando quante ne sono state omesse.",
+      "model": "opus",
+      "definition_file": "agents/report-writer-iva.md",
+      "inputs": [
+        "esito validato e rilievi confermati",
+        "liquidazione ricalcolata e confronto",
+        "checklist documentale e stato fonti",
+        "fonti_utilizzate.json",
+        "rischi residui"
+      ],
+      "outputs": [
+        "report_controllo_iva.md nella struttura obbligatoria",
+        "richiesta_documenti_cliente.md se necessario"
+      ],
+      "controls": [
+        "struttura a sette sezioni rispettata",
+        "ogni importo tracciabile",
+        "limiti documentali dichiarati",
+        "esito coerente con la logica di classificazione",
+        "azioni operative indicate"
+      ],
+      "anomaly_code_prefix": "-"
+    }
+  }
+}

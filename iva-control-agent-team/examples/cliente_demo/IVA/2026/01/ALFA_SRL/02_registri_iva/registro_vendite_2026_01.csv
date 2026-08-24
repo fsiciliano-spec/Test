@@ -1,0 +1,6 @@
+Data;Numero;Cliente;Partita IVA;Imponibile;Aliquota;Imposta;Natura;Sezionale
+10/01/2026;1/2026;BETA S.P.A.;09876543210;10.000,00;22;2.200,00;;1
+18/01/2026;2/2026;GAMMA S.N.C.;11223344556;5.000,00;22;1.100,00;;1
+20/01/2026;4/2026;EDIL SUB S.R.L. - integrazione reverse charge;99988877766;5.000,00;22;1.100,00;;1
+31/01/2026;5/2026;Corrispettivi del mese - riepilogo;;0,00;22;0,00;;2
+Totale;;;;20.000,00;;4.400,00;;

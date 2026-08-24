@@ -1,0 +1,41 @@
+{
+  "_commento": "Template dell'audit trail delle fonti prodotto dall'agente intake-normalizzazione-iva. Ogni file letto genera una voce in 'fonti'.",
+  "controllo": {
+    "cliente": "{{CLIENTE}}",
+    "anno": "{{ANNO}}",
+    "periodo": "{{PERIODO}}",
+    "periodicita": "mensile | trimestrale | non determinata",
+    "cartella_input": "{{PATH_INPUT}}",
+    "cartella_output": "{{PATH_OUTPUT}}",
+    "data_esecuzione": "{{ISO_DATETIME}}",
+    "versione_sistema": "1.0.0"
+  },
+  "cartelle_attese": [
+    {"nome": "01_xml_fatture", "stato": "presente | assente | vuota", "file": 0},
+    {"nome": "02_registri_iva", "stato": "presente | assente | vuota", "file": 0},
+    {"nome": "03_corrispettivi", "stato": "presente | assente | vuota", "file": 0},
+    {"nome": "04_prima_nota", "stato": "presente | assente | vuota", "file": 0},
+    {"nome": "05_bozza_liquidazione", "stato": "presente | assente | vuota", "file": 0},
+    {"nome": "06_crediti_precedenti_f24_lipe", "stato": "presente | assente | vuota", "file": 0}
+  ],
+  "fonti": [
+    {
+      "file": "02_registri_iva/registro_vendite_2026_01.csv",
+      "cartella": "02_registri_iva",
+      "estensione": ".csv",
+      "dimensione_byte": 0,
+      "sha256": "",
+      "tipo_riconosciuto": "registro_vendite",
+      "parser": "parse_excel.leggi_tabella",
+      "righe_estratte": 0,
+      "esito_lettura": "letto | letto_parzialmente | non_letto",
+      "note": ""
+    }
+  ],
+  "documenti_non_letti": [
+    {"file": "", "motivo": ""}
+  ],
+  "alert_qualita_dati": [
+    {"codice": "SRC-002", "file": "", "descrizione": ""}
+  ]
+}

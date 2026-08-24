@@ -1,0 +1,233 @@
+{
+  "controllo": {
+    "cliente": "ALFA_SRL",
+    "anno": "2026",
+    "periodo": "01",
+    "periodicita": "mensile",
+    "partita_iva": "01234567890",
+    "cartella_input": "examples/cliente_demo/IVA/2026/01/ALFA_SRL",
+    "cartella_output": "examples/cliente_demo/IVA/2026/01/ALFA_SRL/99_output_controllo",
+    "data_esecuzione": "2026-08-24T21:01:41",
+    "versione_sistema": "1.0.0",
+    "controllo_completo": true,
+    "esito": "DA SOSPENDERE"
+  },
+  "cartelle_attese": [
+    {
+      "nome": "01_xml_fatture",
+      "stato": "presente",
+      "file": 5,
+      "elenco": [
+        "01_xml_fatture/IT01234567890_00001.xml",
+        "01_xml_fatture/IT01234567890_00002.xml",
+        "01_xml_fatture/IT01234567890_00003.xml",
+        "01_xml_fatture/IT55566677788_00120.xml",
+        "01_xml_fatture/IT99988877766_00045.xml"
+      ]
+    },
+    {
+      "nome": "02_registri_iva",
+      "stato": "presente",
+      "file": 2,
+      "elenco": [
+        "02_registri_iva/registro_acquisti_2026_01.csv",
+        "02_registri_iva/registro_vendite_2026_01.csv"
+      ]
+    },
+    {
+      "nome": "03_corrispettivi",
+      "stato": "presente",
+      "file": 1,
+      "elenco": [
+        "03_corrispettivi/corrispettivi_2026_01.csv"
+      ]
+    },
+    {
+      "nome": "04_prima_nota",
+      "stato": "presente",
+      "file": 1,
+      "elenco": [
+        "04_prima_nota/prima_nota_2026_01.csv"
+      ]
+    },
+    {
+      "nome": "05_bozza_liquidazione",
+      "stato": "presente",
+      "file": 1,
+      "elenco": [
+        "05_bozza_liquidazione/bozza_liquidazione_2026_01.csv"
+      ]
+    },
+    {
+      "nome": "06_crediti_precedenti_f24_lipe",
+      "stato": "presente",
+      "file": 1,
+      "elenco": [
+        "06_crediti_precedenti_f24_lipe/f24_dicembre_2025.csv"
+      ]
+    }
+  ],
+  "fonti": [
+    {
+      "file": "01_xml_fatture/IT01234567890_00001.xml",
+      "cartella": "01_xml_fatture",
+      "estensione": ".xml",
+      "dimensione_byte": 1526,
+      "sha256": "b35bff542e28ac4b7fe02cea58c7cf9bfca00d082bca66a035fc922471371a1f",
+      "tipo_riconosciuto": "fattura_elettronica",
+      "parser": "parse_xml.leggi_fattura",
+      "righe_estratte": 1,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "01_xml_fatture/IT01234567890_00002.xml",
+      "cartella": "01_xml_fatture",
+      "estensione": ".xml",
+      "dimensione_byte": 1514,
+      "sha256": "1ee4b60f0bd5176a04e43657afdbedf2f926917bec5f31f2d8bf8d7a202c237a",
+      "tipo_riconosciuto": "fattura_elettronica",
+      "parser": "parse_xml.leggi_fattura",
+      "righe_estratte": 1,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "01_xml_fatture/IT01234567890_00003.xml",
+      "cartella": "01_xml_fatture",
+      "estensione": ".xml",
+      "dimensione_byte": 1509,
+      "sha256": "9006a925c6c3c8efa7bc575866dd07bd3825099f053ef51a0437024f02a87abd",
+      "tipo_riconosciuto": "fattura_elettronica",
+      "parser": "parse_xml.leggi_fattura",
+      "righe_estratte": 1,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "01_xml_fatture/IT55566677788_00120.xml",
+      "cartella": "01_xml_fatture",
+      "estensione": ".xml",
+      "dimensione_byte": 1533,
+      "sha256": "ea06c70c2b6af440c4a6c56295b0c7aa7843ba66a70cadfec4b5fb30e2f39d14",
+      "tipo_riconosciuto": "fattura_elettronica",
+      "parser": "parse_xml.leggi_fattura",
+      "righe_estratte": 1,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "01_xml_fatture/IT99988877766_00045.xml",
+      "cartella": "01_xml_fatture",
+      "estensione": ".xml",
+      "dimensione_byte": 1578,
+      "sha256": "ba71e6b79153d1cd9510c5e74e13263dbac47f55968c051581a35a07f6c7a88e",
+      "tipo_riconosciuto": "fattura_elettronica",
+      "parser": "parse_xml.leggi_fattura",
+      "righe_estratte": 1,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "02_registri_iva/registro_acquisti_2026_01.csv",
+      "cartella": "02_registri_iva",
+      "estensione": ".csv",
+      "dimensione_byte": 626,
+      "sha256": "ae47bed3bc578da4daf3702e8922a6e30e9371efe956f148e66e9c9a7ad8c040",
+      "tipo_riconosciuto": "registro_acquisti",
+      "parser": "parse_excel.leggi_tabella",
+      "righe_estratte": 5,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "02_registri_iva/registro_vendite_2026_01.csv",
+      "cartella": "02_registri_iva",
+      "estensione": ".csv",
+      "dimensione_byte": 413,
+      "sha256": "9323c7cdd1151e0beb36905f17198fcd5376cc9a5568970e44908a3262c8b4e8",
+      "tipo_riconosciuto": "registro_vendite",
+      "parser": "parse_excel.leggi_tabella",
+      "righe_estratte": 4,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "03_corrispettivi/corrispettivi_2026_01.csv",
+      "cartella": "03_corrispettivi",
+      "estensione": ".csv",
+      "dimensione_byte": 851,
+      "sha256": "fd4937ad42b5294199d12542a141d33e53d20540b7217e3f2cca1b8eeba6def8",
+      "tipo_riconosciuto": "corrispettivi",
+      "parser": "parse_excel.leggi_tabella",
+      "righe_estratte": 21,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "04_prima_nota/prima_nota_2026_01.csv",
+      "cartella": "04_prima_nota",
+      "estensione": ".csv",
+      "dimensione_byte": 260,
+      "sha256": "bc9e66003bdfc66af8f3c03999ce6f9a1b2320c10f86dfaf973775cc316dae1b",
+      "tipo_riconosciuto": "prima_nota",
+      "parser": "parse_excel.leggi_tabella",
+      "righe_estratte": 2,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "05_bozza_liquidazione/bozza_liquidazione_2026_01.csv",
+      "cartella": "05_bozza_liquidazione",
+      "estensione": ".csv",
+      "dimensione_byte": 150,
+      "sha256": "bc663902d56336da953ac7383891d3c0302e35f198c70e164dc4cc6957954375",
+      "tipo_riconosciuto": "bozza_liquidazione",
+      "parser": "run_control._leggi_bozza_tabellare",
+      "righe_estratte": 5,
+      "esito_lettura": "letto",
+      "note": ""
+    },
+    {
+      "file": "06_crediti_precedenti_f24_lipe/f24_dicembre_2025.csv",
+      "cartella": "06_crediti_precedenti_f24_lipe",
+      "estensione": ".csv",
+      "dimensione_byte": 119,
+      "sha256": "a1b2053e18f86ee13b010ab4f75d0577234cb27234c9ff124d454877a1337052",
+      "tipo_riconosciuto": "crediti_f24_lipe",
+      "parser": "parse_excel.leggi_tabella",
+      "righe_estratte": 1,
+      "esito_lettura": "letto",
+      "note": ""
+    }
+  ],
+  "documenti_non_letti": [],
+  "alert_qualita_dati": [],
+  "statistiche_matching": {
+    "documenti_confrontati": 10,
+    "abbinati": 4,
+    "copertura_perc": 40.0,
+    "per_livello": {
+      "esatto": 4,
+      "forte": 0,
+      "importo": 0,
+      "debole": 0
+    },
+    "solo_xml": 1,
+    "solo_registro": 5
+  },
+  "quality_review": [
+    {
+      "codice": "QR-004",
+      "rilievo": "XML-REG-002.01",
+      "esito": "impatto riclassificato",
+      "motivo": "impatto dichiarato pari a zero, sostituito con 'non determinabile'"
+    },
+    {
+      "codice": "QR-002",
+      "rilievo": "DET-001.02",
+      "esito": "fuso",
+      "motivo": "stesso fatto gia' rilevato in DET-001.01 su altra fonte"
+    }
+  ]
+}

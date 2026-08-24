@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:FatturaElettronica versione="FPR12" xmlns:p="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2">
+  <FatturaElettronicaHeader>
+    <CedentePrestatore>
+      <DatiAnagrafici>
+        <IdFiscaleIVA><IdPaese>IT</IdPaese><IdCodice>99988877766</IdCodice></IdFiscaleIVA>
+        <Anagrafica><Denominazione>EDIL SUB S.R.L.</Denominazione></Anagrafica>
+      </DatiAnagrafici>
+    </CedentePrestatore>
+    <CessionarioCommittente>
+      <DatiAnagrafici>
+        <IdFiscaleIVA><IdPaese>IT</IdPaese><IdCodice>01234567890</IdCodice></IdFiscaleIVA>
+        <Anagrafica><Denominazione>ALFA S.R.L.</Denominazione></Anagrafica>
+      </DatiAnagrafici>
+    </CessionarioCommittente>
+  </FatturaElettronicaHeader>
+  <FatturaElettronicaBody>
+    <DatiGenerali><DatiGeneraliDocumento>
+      <TipoDocumento>TD01</TipoDocumento><Divisa>EUR</Divisa>
+      <Data>2026-01-20</Data><Numero>45</Numero>
+      <ImportoTotaleDocumento>5000.00</ImportoTotaleDocumento>
+    </DatiGeneraliDocumento></DatiGenerali>
+    <DatiBeniServizi>
+      <DettaglioLinee><NumeroLinea>1</NumeroLinea><Descrizione>Prestazioni edili in subappalto</Descrizione>
+        <PrezzoTotale>5000.00</PrezzoTotale></DettaglioLinee>
+      <DatiRiepilogo><AliquotaIVA>0.00</AliquotaIVA><Natura>N6.7</Natura>
+        <ImponibileImporto>5000.00</ImponibileImporto><Imposta>0.00</Imposta>
+        <RiferimentoNormativo>Inversione contabile art. 17 c.6 lett. a-ter</RiferimentoNormativo>
+      </DatiRiepilogo>
+    </DatiBeniServizi>
+  </FatturaElettronicaBody>
+</p:FatturaElettronica>
