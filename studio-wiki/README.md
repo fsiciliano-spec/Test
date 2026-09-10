@@ -29,3 +29,14 @@ La guida operativa completa è in [`00_GUIDA_USO_QUOTIDIANO.md`](00_GUIDA_USO_QU
 2. **Formato nomi file:** `YYYYMMDD_Titolo-sintetico.md` (coerente con l'archiviazione dello Studio).
 3. **Niente dati sensibili non necessari:** nelle schede cliente riportare solo ciò che serve al lavoro.
 4. **Versionamento:** ogni modifica passa da git (traccia utile anche in ottica revisione / 231).
+
+## Promemoria automatico
+
+È attivo un **promemoria giornaliero** nei **giorni feriali (lun–ven) alle 08:00 (ora italiana)**
+che apre una sessione, legge lo scadenzario e le note, e invia sul telefono un breve
+promemoria per consultare le scadenze del giorno e registrare le decisioni.
+
+- Per **cambiare orario/giorni, sospenderlo o eliminarlo**: dillo all'assistente
+  («sposta il promemoria alle 18:00», «solo lunedì e giovedì», «disattivalo»).
+- Nota tecnica: l'orario è ancorato all'ora legale; con il passaggio all'ora solare
+  (fine ottobre) potrebbe spostarsi di un'ora finché non lo si riallinea.
